@@ -23,31 +23,66 @@ userRouter.get("/user/requests/recieved", userAuth,async (req, res)=>{
 })
 
 
- userRouter.get("/user/connections", userAuth, async(req, res)=>{
-     try{
-          const loggedInUser=req.user;
+userRouter.get("/user/connections", userAuth, async (req, res) => {
+    try {
+        const loggedInUser = req.user;
 
-          const connection = await ConnectionRequestModel.find({
-             $or:[
-                 {toUserId: loggedInUser._id, status:"accepted"},
-                 {fromUserId: loggedInUser._id, status:"accepted"},
-             ]
-          }).populate("fromUserId", ["firstName", "lastName", "photoUrl", "age", "gender","about"])
-          .populate("toUserId", ["firstName", "lastName" , "photoUrl", "age", "gender", "about"]);
+        // Fetch connections where the user is either the sender or the receiver
+        const connections = await ConnectionRequestModel.find({
+            $or: [
+                { toUserId: loggedInUser._id, status: "accepted" },
+                { fromUserId: loggedInUser._id, status: "accepted" },
+            ],
+        })
+            .populate("fromUserId", [
+                "firstName",
+                "lastName",
+                "photoUrl",
+                "age",
+                "gender",
+                "about",
+            ])
+            .populate("toUserId", [
+                "firstName",
+                "lastName",
+                "photoUrl",
+                "age",
+                "gender",
+                "about",
+            ]);
 
+        if (!connections || connections.length === 0) {
+            return res.status(200).json({
+                message: "No connections found",
+                data: [],
+            });
+        }
 
-          const data = connection.map((row) => {
-            return row.fromUserId._id.toString() === loggedInUser._id.toString()
-                ? row.toUserId
-                : row.fromUserId;
+        // Map to return the connected user details
+        const data = connections.map((connection) => {
+            // Check if the logged-in user is the sender or receiver
+            if (
+                connection.fromUserId &&
+                connection.fromUserId._id.toString() === loggedInUser._id.toString()
+            ) {
+                return connection.toUserId; // Return the receiver's details
+            } else {
+                return connection.fromUserId; // Return the sender's details
+            }
         });
-        res.json({ message: "connections of us", data });
-    }  
-     catch(err){
+
+        res.status(200).json({
+            message: "Connections retrieved successfully",
+            data,
+        });
+    } catch (err) {
         console.error("Error in fetching connections:", err);
-         res.status(404).json("something went wrong");
-     }
- })
+        res.status(500).json({
+            message: "Something went wrong",
+            error: err.message,
+        });
+    }
+});
 
 
 

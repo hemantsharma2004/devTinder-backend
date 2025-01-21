@@ -6,7 +6,7 @@ const adminAuth=(req, res, next)=>{
      if(!isvalid){ 
          res.status(401).send("error occurs");
      }
-     else {
+     else { 
          next();
      }
  }

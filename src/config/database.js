@@ -1,13 +1,14 @@
+const mongoose = require("mongoose");
 
-const mongoose= require("mongoose");
+const connectdb = async () => {
+    try {
+        await mongoose.connect(process.env.DB_CONNECTION_SECRET, {
+        });
+       
+    } catch (err) {
+        console.error("Database connection error:", err.message);
+        process.exit(1); 
+    }
+};
 
-const connectdb= async()=>{
-    await mongoose.connect("mongodb+srv://hemantshar955:KQQZjqinlAEItRKI@namesta.qkttp.mongodb.net/devTinder")
-    
-}
-
-module.exports= connectdb;
-
-
-
-
+module.exports = connectdb;

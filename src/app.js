@@ -5,8 +5,8 @@ const express= require("express");
   const bcrypt= require("bcrypt");
   const cookieParser=require("cookie-parser")
 const{ userAuth }= require("./middleware/user")
-
 const cors= require("cors");
+require('dotenv').config()
 
 
    app.use(express.json());
