@@ -15,7 +15,7 @@ require('dotenv').config()
    app.use(cors({
      origin:"http://localhost:5173",
      methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
-     credentials:true,
+     credentials:true,  
    })
 );
 
@@ -50,7 +50,7 @@ app.use((err, req, res, next) => {
 
  connectdb().then(()=>{
      console.log("database connected successfully")
-     app.listen(3000, ()=>{
+     app.listen(process.env.PORT, ()=>{
          console.log("successfully loged in the 3000 port number")
      })
 })
