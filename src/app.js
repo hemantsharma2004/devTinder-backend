@@ -1,22 +1,22 @@
-const express= require("express");
- const connectdb= require("./config/database");
- const app=express();
-  const User=require("./models/user")
-  const bcrypt= require("bcrypt");
-  const cookieParser=require("cookie-parser")
-const{ userAuth }= require("./middleware/user")
-const cors= require("cors");
+const express = require("express");
+const connectdb = require("./config/database");
+const app = express();
+const User = require("./models/user")
+const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser")
+const { userAuth } = require("./middleware/user")
+const cors = require("cors");
 require('dotenv').config()
 
 
-   app.use(express.json());
-   app.use(cookieParser());
-   
-   app.use(cors({
-     origin:"http://localhost:5173",
-     methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
-     credentials:true,  
-   })
+app.use(express.json());
+app.use(cookieParser());
+
+app.use(cors({
+  origin: "http://localhost:5173",
+  methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
+  credentials: true,
+})
 );
 
 app.options('/profile/edit', (req, res) => {
@@ -24,36 +24,39 @@ app.options('/profile/edit', (req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.status(200).end();  
+  res.status(200).end();
 });
 
+app.get("/", (req, res) => {
+  res.send("Hello World")
+})
 
-   const authRouter= require("./routes/auth");
-   const profileRouter= require("./routes/profile");
-   const requestRouter= require("./routes/request");
-   const userRouter= require("./routes/user");
+const authRouter = require("./routes/auth");
+const profileRouter = require("./routes/profile");
+const requestRouter = require("./routes/request");
+const userRouter = require("./routes/user");
 
 
-   app.use("/", authRouter);
-   app.use("/", profileRouter);
-   app.use("/", requestRouter);
-   app.use("/", userRouter);
-   
+app.use("/", authRouter);
+app.use("/", profileRouter);
+app.use("/", requestRouter);
+app.use("/", userRouter);
 
-   
+
+
 
 app.use((err, req, res, next) => {
-    res.status(500).json({ error: err.message });
+  res.status(500).json({ error: err.message });
 });
 
 
 
- connectdb().then(()=>{
-     console.log("database connected successfully")
-     app.listen(process.env.PORT, ()=>{
-         console.log("successfully loged in the 3000 port number")
-     })
+connectdb().then(() => {
+  console.log("database connected successfully")
+  app.listen(process.env.PORT, () => {
+    console.log("successfully loged in the 3000 port number")
+  })
 })
-.catch((err)=>{
-     console.log("database connection failed");
-})
+  .catch((err) => {
+    console.log("database connection failed");
+  })
