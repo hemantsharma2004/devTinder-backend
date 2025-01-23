@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use(cors({
-  origin: "*",
+  origin: "https://dev-tinder-navy.vercel.app",
   methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
   credentials: true,
 })
