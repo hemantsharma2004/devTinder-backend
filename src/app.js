@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: "https://dev-tinder-navy.vercel.app",
   methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
   credentials: true,
 })
@@ -22,7 +22,7 @@ app.use(cors({
 app.options('/profile/edit', (req, res) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173');
+  res.setHeader('Access-Control-Allow-Origin', 'https://dev-tinder-navy.vercel.app');
   res.setHeader('Access-Control-Allow-Origin', 'https://dev-tinder-navy.vercel.app');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.status(200).end();
