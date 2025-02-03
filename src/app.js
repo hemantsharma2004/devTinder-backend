@@ -16,6 +16,7 @@ app.use(cors({
   origin: "https://dev-tinder-navy.vercel.app",
   methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
   credentials: true,
+  
 })
 );
 

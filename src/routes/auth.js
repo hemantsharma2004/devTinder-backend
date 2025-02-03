@@ -83,8 +83,9 @@ authRouter.post("/login", async (req, res, next) => {
             const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
             res.cookie("token", token, {
-                secure: process.env.NODE_ENV === "production",
-                sameSite: "strict",
+                httpOnly: false,
+                secure: true,  // Ensure cookies are sent only over HTTPS
+                sameSite: "None" // Required for cross-origin requests
             });
 
             res.json({ message: "Login successful", user });
