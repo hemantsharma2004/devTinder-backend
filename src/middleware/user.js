@@ -5,8 +5,9 @@ const userAuth = async (req, res, next) => {
   try {
     const cookies = req.cookies;
     const { token } = cookies;
-
+    console.log(cookies)
     if (!token) {
+      console.log("Please login to continue")
       return res.status(401).send("Please login to continue.");
     }
 
