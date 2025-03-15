@@ -12,12 +12,12 @@ authRouter.post("/signup", async (req, res) => {
         validateSignUpData(req);
 
         // Destructure all necessary fields from req.body, including `age`
-        const { firstName, lastName, emailId, Password, gender, age } = req.body;
+        const { firstName, lastName, emailId, password, gender, age } = req.body;
         console.log(req.body)
 
         // Check if required fields are provided
-        if (!emailId || !Password) {
-            return res.status(400).json({ error: "Email and Password are required" });
+        if (!emailId || !password) {
+            return res.status(400).json({ error: "Email and password are required" });
         }
 
         // Validate the `age` field
@@ -26,7 +26,7 @@ authRouter.post("/signup", async (req, res) => {
         }
 
         // Hash the password
-        const PasswordHash = await bcrypt.hash(Password, 10);
+        const passwordHash = await bcrypt.hash(password, 10);
 
         // Create a new user object
         const user = new User({
@@ -34,8 +34,8 @@ authRouter.post("/signup", async (req, res) => {
             lastName,
             emailId,
             gender,
-            age, // Include `age` in the user object
-            Password: PasswordHash,
+            age,  
+            password: passwordHash,
         });
 
         // Save the user to the database
@@ -67,10 +67,11 @@ authRouter.post("/signup", async (req, res) => {
 // Login
 authRouter.post("/login", async (req, res, next) => {
     try {
-        const { emailId, Password } = req.body;
+        const { emailId, password } = req.body;
+        console.log(emailId, password )
 
-        if (!emailId || !Password) {
-            return res.status(400).json({ error: "Email and Password are required" });
+        if (!emailId || !password) {
+            return res.status(400).json({ error: "Email and password are required" });
         }
 
         const user = await User.findOne({ emailId });
@@ -78,10 +79,10 @@ authRouter.post("/login", async (req, res, next) => {
             return res.status(401).json({ error: "Email is not valid" }); // ✅ Fix: Proper error handling
         }
 
-        const isValidPassword = await bcrypt.compare(Password, user.password); // ✅ Fix: Ensure correct field
+        const isValidpassword = await bcrypt.compare(password, user.Password); // ✅ Fix: Ensure correct field
 
-        if (!isValidPassword) {
-            return res.status(401).json({ error: "Password is not valid" });
+        if (!isValidpassword) {
+            return res.status(401).json({ error: "password is not valid" });
         }
 
         const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });

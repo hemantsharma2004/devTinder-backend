@@ -9,10 +9,10 @@ app.use(express.json());
 app.use(cookieParser());
 
 // ✅ Correct CORS configuration
-const allowedOrigins = ["https://dev-tinder-navy.vercel.app"]; // Explicitly allow frontend
+const allowedOrigins = ["https://dev-tinder-navy.vercel.app","http://localhost:5173"]; // Explicitly allow frontend
 
 app.use(
-  cors({
+  cors({  
     origin: function (origin, callback) {
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
