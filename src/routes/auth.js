@@ -13,6 +13,7 @@ authRouter.post("/signup", async (req, res) => {
 
         // Destructure all necessary fields from req.body, including `age`
         const { firstName, lastName, emailId, Password, gender, age } = req.body;
+        console.log(req.body)
 
         // Check if required fields are provided
         if (!emailId || !Password) {
