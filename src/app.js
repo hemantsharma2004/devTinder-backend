@@ -1,31 +1,46 @@
 const express = require("express");
 const connectdb = require("./config/database");
 const app = express();
-const User = require("./models/user");
-const bcrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
-const { userAuth } = require("./middleware/user");
 const cors = require("cors");
 require("dotenv").config();
 
 app.use(express.json());
 app.use(cookieParser());
 
-// ✅ Properly configure CORS for all requests
-app.use(cors({
-  origin: "https://dev-tinder-navy.vercel.app", // Frontend domain
-  methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true,  // Allows cookies and authentication headers
-}));
+// ✅ Correct CORS configuration
+const allowedOrigins = ["https://dev-tinder-navy.vercel.app"]; // Explicitly allow frontend
 
-// ✅ Ensure CORS headers are included in all responses
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true, // Required to send cookies
+  })
+);
+
+// ✅ Ensure CORS headers are always set
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "https://dev-tinder-navy.vercel.app");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.header("Access-Control-Allow-Credentials", "true");
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+  }
   next();
+});
+
+// ✅ Handle preflight requests properly
+app.options("*", (req, res) => {
+  res.sendStatus(204);
 });
 
 app.get("/", (req, res) => {
@@ -42,15 +57,18 @@ app.use("/", profileRouter);
 app.use("/", requestRouter);
 app.use("/", userRouter);
 
+// Error handling middleware
 app.use((err, req, res, next) => {
   res.status(500).json({ error: err.message });
 });
 
-connectdb().then(() => {
-  console.log("Database connected successfully");
-  app.listen(process.env.PORT, () => {
-    console.log(`Server running on port ${process.env.PORT}`);
+connectdb()
+  .then(() => {
+    console.log("Database connected successfully");
+    app.listen(process.env.PORT, () => {
+      console.log(`Server running on port ${process.env.PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.log("Database connection failed:", err);
   });
-}).catch((err) => {
-  console.log("Database connection failed:", err);
-});
