@@ -13,21 +13,21 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use(cors({
-  origin: "https://dev-tinder-navy.vercel.app",
+  origin: "https://dev-tinder-navy.vercel.app",  // Specific frontend origin
   methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
-  credentials: true,
-  
-})
-);
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,  // Allow cookies and authentication
+}));
 
-app.options('/profile/edit', (req, res) => {
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Access-Control-Allow-Origin', 'https://dev-tinder-navy.vercel.app');
-  res.setHeader('Access-Control-Allow-Origin', 'https://dev-tinder-navy.vercel.app');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
+// Handle preflight requests for all routes
+app.options("*", (req, res) => {
+  res.header("Access-Control-Allow-Origin", "https://dev-tinder-navy.vercel.app");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Credentials", "true");
   res.status(200).end();
 });
+
 
 app.get("/", (req, res) => {
   res.send("Hello World")
