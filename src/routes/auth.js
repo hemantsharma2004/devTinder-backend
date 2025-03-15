@@ -75,28 +75,31 @@ authRouter.post("/login", async (req, res, next) => {
 
         const user = await User.findOne({ emailId });
         if (!user) {
-            throw new Error("Email is not valid");
+            return res.status(401).json({ error: "Email is not valid" }); // ✅ Fix: Proper error handling
         }
 
-        const isValidPassword = await bcrypt.compare(Password, user.Password);
+        const isValidPassword = await bcrypt.compare(Password, user.password); // ✅ Fix: Ensure correct field
 
-        if (isValidPassword) {
-            const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
-
-            res.cookie("token", token, {
-                httpOnly: false,
-                secure: true,  // Ensure cookies are sent only over HTTPS
-                sameSite: "None" // Required for cross-origin requests
-            });
-
-            res.json({ message: "Login successful", user });
-        } else {
-            throw new Error("Password is not valid");
+        if (!isValidPassword) {
+            return res.status(401).json({ error: "Password is not valid" });
         }
+
+        const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+
+        res.cookie("token", token, {
+            httpOnly: true,   // ✅ More secure
+            secure: process.env.NODE_ENV === "production", // ✅ Only secure in production
+            sameSite: "None"
+        });
+
+        res.json({ message: "Login successful", user });
     } catch (error) {
+        console.error("Login error:", error);
         next(error);
     }
 });
+
+
 
 // Logout
 authRouter.post("/logout", (req, res) => {
