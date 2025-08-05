@@ -1,17 +1,16 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose; 
 
-
 const connectionRequestSchema = new Schema({
     fromUserId: {
-        required: true,
-        ref: "user",
         type: mongoose.Schema.Types.ObjectId, 
+        ref: "User",  // ✅ use proper casing
+        required: true,
     },
     toUserId: {
-        required: true,
-        ref: "user",
         type: mongoose.Schema.Types.ObjectId, 
+        ref: "User",  // ✅ use proper casing
+        required: true,
     },
     status: {
         type: String,
@@ -25,16 +24,17 @@ const connectionRequestSchema = new Schema({
     timestamps: true, 
 });
 
-   connectionRequestSchema.index({fromUserId: 1 , toUserId: 1 });
+// Ensure no duplicate request to same user and prevent self-request
+connectionRequestSchema.index({ fromUserId: 1, toUserId: 1 }, { unique: true });
 
- connectionRequestSchema.pre('save', function(next) {
+connectionRequestSchema.pre('save', function(next) {
     const connectionRequest = this;
-     if(connectionRequest.fromUserId.equals(connectionRequest.toUserId)){
-         throw new Error("cannot sent connection request to yourself !!")
-     }
-  next();
+    if (connectionRequest.fromUserId.equals(connectionRequest.toUserId)) {
+        return next(new Error("Cannot send connection request to yourself!"));
+    }
+    next();
 });
 
-const ConnectionRequestModel = mongoose.model("ConnectionRequestModel", connectionRequestSchema); 
+const ConnectionRequestModel = mongoose.model("ConnectionRequestModel", connectionRequestSchema);
 
 module.exports = ConnectionRequestModel;

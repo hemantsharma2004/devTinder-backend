@@ -7,108 +7,119 @@ const jwt = require("jsonwebtoken");
 
 // Signup
 authRouter.post("/signup", async (req, res) => {
-    try {
-        // Ensure you validate all input data
-        validateSignUpData(req);
+  try {
+    validateSignUpData(req);
 
-        // Destructure all necessary fields from req.body, including `age`
-        const { firstName, lastName, emailId, password, gender, age } = req.body;
-        console.log(req.body)
+    const { firstName, lastName, emailId, password, gender, age, photoUrl } = req.body;
 
-        // Check if required fields are provided
-        if (!emailId || !password) {
-            return res.status(400).json({ error: "Email and password are required" });
-        }
-
-        // Validate the `age` field
-        if (!age || typeof age !== "number" || age <= 0) {
-            return res.status(400).json({ message: "Invalid age provided." });
-        }
-
-        // Hash the password
-        const passwordHash = await bcrypt.hash(password, 10);
-
-        // Create a new user object
-        const user = new User({
-            firstName,
-            lastName,
-            emailId,
-            gender,
-            age,  
-            password: passwordHash,
-        });
-
-        // Save the user to the database
-        const savedUser = await user.save();
-
-        // Generate a JWT token
-        const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
-
-        // Set the token in a secure HTTP-only cookie
-        res.cookie("token", token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
-        });
-
-        // Respond with a success message and the saved user
-        res.status(201).json({
-            message: "User added successfully",
-            user: savedUser,
-            token: token,
-        });
-    } catch (err) {
-        console.error(err);
-        res.status(400).json({ error: err.message });
+    if (!emailId || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
     }
-});
 
-
-// Login
-authRouter.post("/login", async (req, res, next) => {
-    try {
-        const { emailId, password } = req.body;
-        console.log(emailId, password )
-
-        if (!emailId || !password) {
-            return res.status(400).json({ error: "Email and password are required" });
-        }
-
-        const user = await User.findOne({ emailId });
-        if (!user) {
-            return res.status(401).json({ error: "Email is not valid" }); // ✅ Fix: Proper error handling
-        }
-
-        const isValidpassword = await bcrypt.compare(password, user.Password); // ✅ Fix: Ensure correct field
-
-        if (!isValidpassword) {
-            return res.status(401).json({ error: "password is not valid" });
-        }
-
-        const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
-
-        res.cookie("token", token, {
-            httpOnly: true, // ✅ More secure
-            secure: true,   // ✅ Required for HTTPS
-            sameSite: "None" // ✅ Required for cross-origin requests
-        });
-
-        res.json({ message: "Login successful", user });
-    } catch (error) {
-        console.error("Login error:", error);
-        next(error);
+    if (!age || typeof age !== "number" || age <= 0) {
+      return res.status(400).json({ error: "Invalid age provided." });
     }
-});
 
+    const existingUser = await User.findOne({ emailId });
+    if (existingUser) {
+      return res.status(400).json({ error: "Email already in use" });
+    }
 
+    const passwordHash = await bcrypt.hash(password, 10);
 
-// Logout
-authRouter.post("/logout", (req, res) => {
-    res.cookie("token", null, {
-        expires: new Date(Date.now()),
-        httpOnly: true,
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      gender,
+      age,
+      photoUrl,  // ✅ Save photo URL
+      Password: passwordHash,
     });
-    res.json({ message: "Logout successful" });
+
+    const savedUser = await user.save();
+
+    const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+    });
+
+    res.status(201).json({
+      message: "User added successfully",
+      user: {
+        _id: savedUser._id,
+        firstName: savedUser.firstName,
+        lastName: savedUser.lastName,
+        emailId: savedUser.emailId,
+        gender: savedUser.gender,
+        age: savedUser.age,
+        photoUrl: savedUser.photoUrl || "", // ✅ include in response
+      },
+      token,
+    });
+  } catch (err) {
+    console.error("Signup error:", err);
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Login – include photoUrl in response
+authRouter.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+
+    if (!emailId || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    const user = await User.findOne({ emailId }).select('+Password');
+    if (!user) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.Password);
+    if (!isMatch) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax"
+    });
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        emailId: user.emailId,
+        gender: user.gender,
+        age: user.age,
+        photoUrl: user.photoUrl || "", // ✅ include in login response too
+      }
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Server error during authentication" });
+  }
+});
+
+
+
+authRouter.post("/logout", (req, res) => {
+  res.cookie("token", null, {
+    expires: new Date(Date.now()),
+    httpOnly: true,
+  });
+  res.json({ message: "Logout successful" });
 });
 
 module.exports = authRouter;
