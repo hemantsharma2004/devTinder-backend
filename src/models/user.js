@@ -37,15 +37,20 @@ const userschema=new mongoose.Schema({
        type:Number,
        min:18,
      },
-     gender:{
-      type: String,
-       default: "Not Specified",
-         validate(value){
-             if(!["male", "female", "other", "not specified"].includes(value)){
-                throw new Error("data not found");
-             }
-         }
-     },
+     // In your User model schema
+gender: {
+  type: String,
+  enum: ['Male', 'Female', 'Other', 'male', 'female', 'other'], // Allow both cases
+  trim: true,
+  validate: {
+    validator: function(v) {
+      // Case-insensitive validation
+      const allowed = ['male', 'female', 'other'];
+      return allowed.includes(v.toLowerCase());
+    },
+    message: props => `${props.value} is not a valid gender`
+  }
+},
       photoUrl:{
          type:String,
          default:"https://th.bing.com/th/id/OIP.mP1RB8xuQaHAvUkonYY6HwHaHK?rs=1&pid=ImgDetMain",

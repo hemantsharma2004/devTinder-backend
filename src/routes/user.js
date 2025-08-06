@@ -15,28 +15,20 @@ userRouter.get("/user/requests/received", userAuth, async (req, res) => {
     const connectionRequests = await ConnectionRequestModel.find({
       toUserId: loggedInUser._id,
       status: "interested",
-    }).populate("fromUserId", USER_SAFE_DATA);
+    }).populate("fromUserId", USER_SAFE_DATA); // Assuming USER_SAFE_DATA is correct
 
-    const response = connectionRequests.map((req) => ({
-      requestId: req._id,
-      fromUser: req.fromUserId
-        ? {
-            firstName: req.fromUserId.firstName,
-            lastName: req.fromUserId.lastName,
-            emailId: req.fromUserId.emailId,
-          }
-        : null,
-      status: req.status,
-    }));
-
-    res.json({ message: "Data sent successfully", data: response });
+    res.json({
+      message: "Data fetched successfully",
+      data: connectionRequests,
+    });
   } catch (err) {
-    console.error("Error fetching received requests:", err);
-    res
-      .status(500)
-      .json({ message: "Something went wrong", error: err.message });
+    // ❌ Bug: req.statusCode is not valid — it should be res.status(...)
+    res.status(400).send("ERROR: " + err.message);
   }
 });
+
+
+
 
 
 
