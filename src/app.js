@@ -6,32 +6,34 @@ require("dotenv").config();
 
 const app = express();
 
-// ✅ Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// ✅ Allowed origins
 const allowedOrigins = [
-  "https://dev-tinder-navy.vercel.app", // Your deployed frontend
-  "http://localhost:5173"               // Local development frontend
+  "https://dev-tinder-navy.vercel.app",
+  "http://localhost:5173"
 ];
 
-// ✅ CORS middleware
-app.use(cors({
-  origin: allowedOrigins,
+const corsOptions = {
+  origin: (origin, callback) => {
+    // origin is undefined for same-origin requests or some tools (Postman)
+    if (!origin) return callback(null, true); 
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error("CORS: Origin not allowed by CORS"));
+  },
   credentials: true,
-  methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"]
-}));
+  methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "Accept", "X-Requested-With"]
+};
 
-// ✅ Preflight (OPTIONS) request handling
-app.options("*", cors({
-  origin: allowedOrigins,
-  credentials: true,
-  methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"]
-}));
+app.use(cors(corsOptions));
+// Make sure preflight requests are answered using same options
+app.options("*", cors(corsOptions));
+
+// ... your routers and error handler as before
+
+
 
 // ✅ Health check route
 app.get("/", (req, res) => {
